@@ -3,6 +3,7 @@
   "wake_word": "Hey Hene",
   "author": "Im-a-Train",
   "model": "./hey_hene.tflite",
+  "website": "https://github.com/Im-a-Train/wakewords",
   "version": 1,
   "micro": {
     "probability_cutoff": 0.5,
