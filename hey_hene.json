@@ -2,7 +2,6 @@
   "type": "micro",
   "wake_word": "Hey Hene",
   "author": "Im-a-Train",
-  "website": "",
   "model": "./hey_hene.tflite",
   "version": 1,
   "micro": {
