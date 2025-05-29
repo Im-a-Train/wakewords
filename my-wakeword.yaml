@@ -1555,7 +1555,6 @@ micro_wake_word:
     - model: hey_mycroft
       id: hey_mycroft
     - model: https://raw.githubusercontent.com/Im-a-Train/wakewords/refs/heads/main/hey_hene.json
-      id: hey_hene
     - model: https://github.com/kahrendt/microWakeWord/releases/download/stop/stop.json
       id: stop
       internal: true
