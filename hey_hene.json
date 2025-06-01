@@ -5,7 +5,7 @@
   "website": "https://github.com/Im-a-Train/wakewords",
   "model": "hey_hene.tflite",
   "trained_languages": ["en","nl","fr","de","it","es","sv"],
-  "version": 1,
+  "version": 2,
   "micro": {
     "probability_cutoff": 0.85,
     "feature_step_size": 10,
