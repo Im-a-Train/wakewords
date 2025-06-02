@@ -3,7 +3,7 @@
   "wake_word": "Hey Hene",
   "author": "Im-a-Train",
   "website": "https://github.com/Im-a-Train/wakewords",
-  "model": "hey_hene_100k.tflite",
+  "model": "hey_hene_2.tflite",
   "trained_languages": ["en","nl","fr","de","it","es","sv"],
   "version": 2,
   "micro": {
