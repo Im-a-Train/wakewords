@@ -5,14 +5,14 @@
   "website": "https://github.com/Im-a-Train/wakewords",
   "model": "hey_hene_3.tflite",
   "trained_languages": [
-    "en"
+    "en", "de"
   ],
   "version": 2,
   "micro": {
-    "probability_cutoff": 0.68,
+    "probability_cutoff": 0.70,
     "sliding_window_size": 5,
     "feature_step_size": 10,
-    "tensor_arena_size": 22860,
+    "tensor_arena_size": 30000,
     "minimum_esphome_version": "2024.7.0"
   }
 }
