@@ -44,10 +44,16 @@ Einmalige Einrichtung:
 3. **Im Ubuntu-Terminal: Docker Engine** installieren (<https://docs.docker.com/engine/install/ubuntu/>).
    Docker Desktop mit WSL-Integration kann auch gehen, aber die ROCm-Bibliotheken müssen
    im Ubuntu liegen. Mit Docker direkt in Ubuntu ist das sicher der Fall.
-4. **librocdxg installieren** (verbindet ROCm mit dem Windows-Treiber), gemäss
-   <https://github.com/ROCm/librocdxg> (fertiges `.deb` oder aus dem Quellcode). Danach muss
-   `/opt/rocm/lib/librocdxg.so` existieren. Liegt die Datei woanders, den Pfad setzen:
-   `export ROCDXG_LIB=/pfad/librocdxg.so`.
+4. **librocdxg installieren** (verbindet ROCm mit dem Windows-Treiber). Im Ubuntu-Terminal:
+   ```bash
+   wget https://github.com/ROCm/librocdxg/releases/download/v1.2.2/rocdxg-roct_1.2.2_amd64.deb
+   sudo dpkg -i rocdxg-roct_1.2.2_amd64.deb
+   ls /opt/rocm/lib/librocdxg.so /opt/rocm/share/rocdxg/dids.conf   # beide müssen existieren
+   ```
+   Ein komplettes ROCm braucht es im Ubuntu nicht, das steckt im Docker-Image.
+   (Das GitHub-Repo von librocdxg ist als «deprecated» markiert, weil der Code nach
+   `ROCm/rocm-systems` umgezogen ist. Die Pakete dort funktionieren aber weiterhin.
+   Neuere Versionen: <https://github.com/ROCm/librocdxg/releases>.)
 5. **Repo ins Linux-Dateisystem klonen**, nicht nach `/mnt/c/...`. Unter `/mnt/c` sind die
    Dateizugriffe extrem langsam, und das Training liest viele GB:
    ```bash
