@@ -1,0 +1,183 @@
+# Konfiguration für das Training des Wake Words «Hey Henä».
+# Alle Pfade sind relativ zum Container-Arbeitsverzeichnis /work.
+
+wake_word:
+  # Dateiname des Modells (ohne Endung) und Anzeigename in Home Assistant
+  id: hey_hena
+  display_name: "Hey Henä"
+  author: im-a-train
+  website: https://github.com/Im-a-Train/wakewords
+
+# ---------------------------------------------------------------------------
+# Echte Aufnahmen (wichtigste Datenquelle für Berndeutsch)
+# ---------------------------------------------------------------------------
+recordings:
+  # Pro Person ein Ordner unter recordings/positive/<name>/ mit beliebigen
+  # Audiodateien (m4a, mp3, wav, ogg, opus, webm ...). Eine Datei darf viele
+  # «Hey Henä» mit kurzen Pausen enthalten, sie wird automatisch zerschnitten.
+  positive_dir: recordings/positive
+  # Ordner mit langen Aufnahmen ohne Wake Word (Gespräche, Radio SRF, TV ...).
+  negative_dir: recordings/negative
+  # Anteil der Schnipsel, die nie trainiert, sondern nur zum Testen verwendet werden
+  test_fraction: 0.2
+  # Wie oft jeder echte Schnipsel (jedes Mal anders verrauscht) ins Training kommt
+  train_repetitions: 15
+  # Grenzen für einen gültigen Schnipsel (Sekunden)
+  min_duration_s: 0.4
+  max_duration_s: 2.0
+
+# ---------------------------------------------------------------------------
+# Synthetische Beispiele mit Piper TTS
+# ---------------------------------------------------------------------------
+tts:
+  # Piper-Stimmen mit Gewichtung. Mehrsprecher-Modelle bringen viel Vielfalt.
+  # Die Lautschrift unten wird direkt gesprochen, die Sprache der Stimme
+  # bestimmt vor allem Klangfarbe und Akzent.
+  # de_DE-mls-medium ist absichtlich nicht dabei: es brabbelt bei kurzen
+  # Sätzen oft minutenlang weiter.
+  voices:
+    en_US-libritts_r-medium: 4       # 904 Sprecher
+    en_GB-vctk-medium: 2             # 109 Sprecher, britische Akzente
+    en_US-l2arctic-medium: 2         # 24 Sprecher mit Akzent (nicht Englisch als Muttersprache)
+    en_US-arctic-medium: 1
+    en_GB-aru-medium: 1
+    de_DE-thorsten_emotional-medium: 2
+    de_DE-thorsten-high: 1
+    de_DE-kerstin-low: 1
+    de_DE-ramona-low: 1
+    de_DE-eva_k-x_low: 1
+    de_DE-karlsson-low: 1
+    de_DE-pavoque-low: 1
+    lb_LU-marylux-medium: 1
+    nl_NL-mls-medium: 1
+    nl_BE-nathalie-medium: 1
+  # Zufällige Variation pro Beispiel [min, max]
+  length_scale: [0.8, 1.45]    # Sprechtempo (grösser = langsamer)
+  noise_scale: [0.4, 0.9]
+  noise_w_scale: [0.5, 1.0]
+  # Beispiele ausserhalb dieser Sprechdauer werden verworfen (TTS-Aussetzer)
+  min_duration_s: 0.4
+  max_duration_s: 1.6
+
+  positive:
+    count: 20000
+    # Lautschrift (IPA, wie espeak-ng) in [[ ... ]]. Bitte hier an eure
+    # Aussprache anpassen! Prüfen mit: ./run.sh preview
+    #   «Hey»:  heɪ (englisch), hɛɪ, hæɪ (breiter)
+    #   «Henä»: hˈɛnæ (kurzes e, offenes ä am Schluss)
+    phrases:
+      - "[[ hˈeɪ hˈɛnæ ]]"
+      - "[[ hˈeɪ hˈɛnæ ]]"
+      - "[[ hˈeɪ hˈɛnæ ]]"
+      - "[[ hˈɛɪ hˈɛnæ ]]"
+      - "[[ hˈɛɪ hˈɛnæ ]]"
+      - "[[ hˈæɪ hˈɛnæ ]]"
+      - "[[ hˈeɪ hˈɛnɛ ]]"
+      - "[[ hˈeɪ hˈænæ ]]"
+      - "[[ heɪ hˈɛnæ ]]"
+      - "[[ hˈeɪ hˈɛnːæ ]]"
+      - "[[ hˈeɪ hˈɛna ]]"
+      - "[[ hˈɛ hˈɛnæ ]]"
+      - "[[ hˈeɪ, hˈɛnæ ]]"
+
+  negative:
+    count: 12000
+    # Ähnlich klingende Wörter, auf die das Modell NICHT reagieren soll.
+    # Vorsicht: Zu nahe Varianten senken die Erkennungsrate. «Henä» allein
+    # ist darum absichtlich nicht dabei.
+    phrases:
+      - "[[ hˈeɪ ˈana ]]"          # Hey Anna
+      - "[[ hˈeɪ hˈana ]]"         # Hey Hanna
+      - "[[ hˈeɪ lˈeːna ]]"        # Hey Lena
+      - "[[ hˈeɪ nˈeːna ]]"        # Hey Nena
+      - "[[ hˈeɪ ˈɛnæ ]]"          # Hey Änä
+      - "[[ hˈeɪ mˈɛnæ ]]"         # Hey Männä
+      - "[[ hˈeɪ bˈɛnæ ]]"         # Hey Bänä
+      - "[[ hˈeɪ hˈɛnsi ]]"        # Hey Hänsi
+      - "[[ hˈeɪ hˈɛni ]]"         # Hey Hänni
+      - "[[ hˈeɪ hˈaɪnts ]]"       # Hey Heinz
+      - "[[ hˈeɪ hˈɛlæ ]]"         # Hey Hälä
+      - "[[ hˈɛnə ]]"              # Henne
+      - "[[ hˈeɪ hˈɛnɐ ]]"         # Hey Henner
+      - "[[ ʔɛ nˈaɪ ]]"            # eh nei
+      - "[[ hˈeɪ ɡˈɛl ]]"          # hey gäll
+      - "[[ hˈeɪ sˈiri ]]"         # Hey Siri
+      - "[[ hˈeɪ jˈarvɪs ]]"       # Hey Jarvis
+      - "[[ hˈeɪ dˈuː ]]"          # hey du
+      - "[[ hˈeɪ ]]"               # nur «Hey»
+      - "Henne"
+      - "Hey Anna"
+      - "Hey Lena"
+      - "Hänsel und Gretel"
+      - "Hey, wie geht's?"
+      - "Hennen legen Eier"
+
+# ---------------------------------------------------------------------------
+# Augmentierung (Hall, Hintergrundgeräusche)
+# ---------------------------------------------------------------------------
+augmentation:
+  duration_s: 3.2
+  background_min_snr_db: -5
+  background_max_snr_db: 15
+  probabilities:
+    SevenBandParametricEQ: 0.15
+    TanhDistortion: 0.1
+    PitchShift: 0.15
+    BandStopFilter: 0.1
+    AddColorNoise: 0.15
+    AddBackgroundNoise: 0.75
+    Gain: 1.0
+    RIR: 0.6
+
+# ---------------------------------------------------------------------------
+# Training (microWakeWord)
+# ---------------------------------------------------------------------------
+training:
+  # Listen = mehrere Trainingsphasen hintereinander
+  steps: [20000, 10000]
+  learning_rates: [0.001, 0.0002]
+  positive_class_weight: [1, 1]
+  # Tiefer = empfindlicher (mehr Erkennung, aber auch mehr Fehlauslösungen)
+  negative_class_weight: [15, 20]
+  batch_size: 128
+  eval_step_interval: 500
+  clip_duration_ms: 1500
+  # SpecAugment pro Phase
+  time_mask_max_size: [5, 0]
+  time_mask_count: [2, 0]
+  freq_mask_max_size: [5, 0]
+  freq_mask_count: [2, 0]
+  # Auswahl der besten Gewichte
+  minimization_metric: null
+  target_minimization: 0.9
+  maximization_metric: average_viable_recall
+  # Wie oft die jeweilige Datenquelle in einem Batch gezogen wird
+  sampling_weights:
+    tts_positive: 2.0
+    real_positive: 3.0
+    tts_negative: 3.0
+    real_negative: 3.0
+    speech: 10.0
+    dinner_party: 10.0
+    no_speech: 5.0
+  # Modellarchitektur (Standard von okay_nabu)
+  model_args:
+    - mixednet
+    - --pointwise_filters=64,64,64,64
+    - --repeat_in_block=1,1,1,1
+    - --mixconv_kernel_sizes=[5],[7,11],[9,15],[23]
+    - --residual_connection=0,0,0,0
+    - --first_conv_filters=32
+    - --first_conv_kernel_size=5
+    - --stride=3
+
+# ---------------------------------------------------------------------------
+# Manifest für ESPHome
+# ---------------------------------------------------------------------------
+manifest:
+  # Wird von «./run.sh evaluate» empfohlen, hier als Startwert
+  probability_cutoff: 0.7
+  sliding_window_size: 5
+  tensor_arena_size: 30000
+  trained_languages: [de, en]
+  minimum_esphome_version: "2024.7.0"

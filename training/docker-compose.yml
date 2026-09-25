@@ -1,0 +1,45 @@
+# Aufruf am einfachsten über ./run.sh (setzt Benutzer- und Gruppen-IDs).
+x-common: &common
+  volumes:
+    - .:/work
+    # Das ganze Repo (read-only), um alte Modelle zu vergleichen: --model /repo/hey_hene_4.tflite
+    - ..:/repo:ro
+  user: "${HOST_UID:-0}:${HOST_GID:-0}"
+  environment:
+    HOME: /tmp
+  ipc: host
+  shm_size: 8g
+
+services:
+  # AMD-GPU über ROCm (Radeon RX 9070 XT)
+  wwtrain:
+    <<: *common
+    build:
+      context: .
+    image: wwtrain:rocm
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    group_add:
+      - "${VIDEO_GID:-44}"
+      - "${RENDER_GID:-109}"
+    security_opt:
+      - seccomp=unconfined
+    environment:
+      HOME: /tmp
+      # Kompilierte GPU-Kernel zwischen den Läufen behalten (erster Start dauert sonst länger)
+      MIOPEN_USER_DB_PATH: /work/data/.miopen
+      MIOPEN_CUSTOM_CACHE_DIR: /work/data/.miopen
+      # Nur nötig, falls TensorFlow die Karte nicht erkennt:
+      # HSA_OVERRIDE_GFX_VERSION: "12.0.1"
+
+  # Fallback ohne GPU: WWTRAIN_CPU=1 ./run.sh ...
+  wwtrain-cpu:
+    <<: *common
+    profiles: [cpu]
+    build:
+      context: .
+      args:
+        BASE_IMAGE: python:3.12-slim-bookworm
+        INSTALL_TENSORFLOW: tensorflow==2.20.*
+    image: wwtrain:cpu
