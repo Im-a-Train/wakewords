@@ -1,0 +1,51 @@
+# Home Assistant Voice PE mit eigenem Wake Word «Hey Henä».
+#
+# Statt die ganze Firmware zu kopieren (wie my-wakeword.yaml), wird die offizielle
+# Firmware als Paket eingebunden und nur das Nötige ergänzt. So bekommst du
+# Updates von Nabu Casa, indem du die Version unten erhöhst.
+#
+# Verwendung im ESPHome Device Builder (Home Assistant Add-on):
+#   1. Gerät übernehmen («Take control») oder bestehende Konfiguration öffnen
+#   2. Inhalt durch diese Datei ersetzen, Namen unten anpassen
+#   3. «Install» → «Wirelessly»
+
+substitutions:
+  # Gleich wie bisher in Home Assistant, damit das Gerät seine Entitäten behält
+  name: home-assistant-voice
+  friendly_name: Home Assistant Voice
+  # Modell-Manifest (nach dem Training aus training/output/ ins Repo-Root kopieren)
+  hey_hena_model: https://raw.githubusercontent.com/Im-a-Train/wakewords/refs/heads/main/hey_hena.json
+
+packages:
+  voice_pe: github://esphome/home-assistant-voice-pe/home-assistant-voice.yaml@26.9.0
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+micro_wake_word:
+  models:
+    - model: ${hey_hena_model}
+      id: hey_hena
+
+# Schwellwert für «Hey Henä» direkt in Home Assistant einstellen, ohne neu zu flashen.
+# Tiefer = reagiert öfter (auch fälschlich), höher = vorsichtiger.
+# Der offizielle Regler «Wake word sensitivity» wirkt nur auf okay_nabu/hey_jarvis/hey_mycroft.
+number:
+  - platform: template
+    name: "Hey Henä Schwelle"
+    id: hey_hena_cutoff
+    icon: mdi:tune-vertical
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    min_value: 0.30
+    max_value: 0.99
+    step: 0.01
+    initial_value: 0.70
+    on_value:
+      - lambda: id(hey_hena).set_probability_cutoff((uint8_t) (x * 255.0f));
