@@ -189,16 +189,12 @@ So siehst du schwarz auf weiss, ob das neue Modell auf euren Stimmen besser ist.
 ## Ins Voice PE bringen
 
 1. `output/hey_hena.tflite` und `output/hey_hena.json` ins Repo-Root kopieren, committen, pushen.
-2. In `my-wakeword.yaml` das Modell eintragen:
-
-   ```yaml
-   micro_wake_word:
-     models:
-       - model: https://raw.githubusercontent.com/Im-a-Train/wakewords/refs/heads/main/hey_hena.json
-         id: hey_hena
-   ```
-
-3. In ESPHome neu kompilieren und flashen.
+2. Im ESPHome Device Builder die Konfiguration des Voice PE durch
+   [`voice-pe-hey-hena.yaml`](../voice-pe-hey-hena.yaml) ersetzen. Sie bindet die offizielle
+   Firmware als Paket ein und ergänzt nur das Modell und einen Regler «Hey Henä Schwelle».
+3. «Install» → «Wirelessly».
+4. In Home Assistant beim Gerät das Wake Word «Hey Henä» auswählen und die Schwelle mit dem
+   Wert aus `output/hey_hena_evaluation.txt` starten, dann im Alltag feinjustieren.
 
 Falls das Gerät meldet, dass das Modell nicht geladen werden kann, `tensor_arena_size` in
 `config.yaml` erhöhen (z. B. 35000) und `./run.sh evaluate` erneut ausführen, damit das
