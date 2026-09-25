@@ -78,6 +78,12 @@ def run(paths: Paths, cfg: dict, model_path: Path | None = None, window: int | N
     window = window or cfg["manifest"]["sliding_window_size"]
     if not model_path.exists():
         raise SystemExit(f"Modell {model_path} nicht gefunden")
+    from ai_edge_litert.interpreter import Interpreter
+
+    shape = list(Interpreter(model_path=str(model_path)).get_input_details()[0]["shape"])
+    if shape[-1] != 40:
+        raise SystemExit(f"{model_path.name} hat den Eingang {shape} und ist kein microWakeWord-Modell "
+                         "(vermutlich openWakeWord). Es läuft nicht auf dem Voice PE.")
     LOG.info("Modell: %s (sliding_window_size=%d)", model_path, window)
 
     clips = sorted((paths.real_positive / "test").glob("*.wav"))
