@@ -26,19 +26,27 @@ def _init_worker(voice_dir: str):
 
 
 def _get_voice(name: str):
-    from piper import PiperVoice
+    """Lädt eine Stimme. Pro Prozess bleibt nur eine Stimme im Speicher
+    (jede belegt 100-200 MB, bei vielen Prozessen läuft sonst der RAM voll)."""
+    import json
 
     import onnxruntime
+    from piper import PiperVoice
+    from piper.config import PiperConfig
+    from piper.voice import ESPEAK_DATA_DIR
 
     if name not in _voices:
+        _voices.clear()
         path = os.path.join(_voice_dir, f"{name}.onnx")
-        voice = PiperVoice.load(path)
+        with open(f"{path}.json", "r", encoding="utf-8") as fh:
+            config = PiperConfig.from_dict(json.load(fh))
         # Ein Thread pro Prozess, parallelisiert wird über mehrere Prozesse
         opts = onnxruntime.SessionOptions()
         opts.intra_op_num_threads = 1
         opts.inter_op_num_threads = 1
-        voice.session = onnxruntime.InferenceSession(path, sess_options=opts, providers=["CPUExecutionProvider"])
-        _voices[name] = voice
+        session = onnxruntime.InferenceSession(path, sess_options=opts, providers=["CPUExecutionProvider"])
+        _voices[name] = PiperVoice(config=config, session=session,
+                                   espeak_data_dir=Path(ESPEAK_DATA_DIR), download_dir=Path(_voice_dir))
     return _voices[name]
 
 
@@ -101,16 +109,31 @@ def build_combos(paths: Paths, cfg: dict, phrases: list[str]):
     return combos
 
 
-def task_stream(combos, tcfg, seed: int):
+def task_stream(combos, tcfg, seed: int, count: int):
+    """Aufgaben nach Stimme gruppiert: Alle Prozesse arbeiten gleichzeitig an derselben
+    Stimme, jede Stimme bekommt ihren Anteil gemäss Gewicht. Wiederholt sich, bis der
+    Aufrufer genug gültige Beispiele hat (einige werden als zu kurz/lang verworfen)."""
     rnd = random.Random(seed)
-    names = [c[0] for c in combos]
-    weights = [c[1] for c in combos]
-    phrase_map = {c[0]: c[2] for c in combos}
+    total = sum(c[1] for c in combos)
     i = 0
     while True:
-        voice = rnd.choices(names, weights)[0]
-        yield (i, voice, rnd.choice(phrase_map[voice]), rnd.getrandbits(32), tcfg)
-        i += 1
+        for name, weight, phrases in combos:
+            for _ in range(max(1, round(count * weight / total))):
+                yield (i, name, rnd.choice(phrases), rnd.getrandbits(32), tcfg)
+                i += 1
+
+
+def worker_count() -> int:
+    """Anzahl Prozesse: CPU-Kerne, aber begrenzt durch den freien Arbeitsspeicher."""
+    procs = max(1, (os.cpu_count() or 2) - 1)
+    try:
+        with open("/proc/meminfo") as fh:
+            info = {line.split(":")[0]: int(line.split()[1]) for line in fh}
+        # ca. 500 MB pro Prozess (Python + eine Stimme + Puffer)
+        procs = min(procs, max(1, info["MemAvailable"] // (500 * 1024)))
+    except (OSError, KeyError, ValueError):
+        pass
+    return procs
 
 
 def generate(paths: Paths, cfg: dict, kind: str, out_dir: Path, count: int, seed: int, force: bool):
@@ -124,13 +147,13 @@ def generate(paths: Paths, cfg: dict, kind: str, out_dir: Path, count: int, seed
 
     combos = build_combos(paths, cfg, phrases)
     worker_cfg = {k: tcfg[k] for k in ("length_scale", "noise_scale", "noise_w_scale", "min_duration_s", "max_duration_s")}
-    procs = max(1, (os.cpu_count() or 2) - 1)
+    procs = worker_count()
     LOG.info("Erzeuge %d %s-Beispiele mit %d Prozessen", count, kind, procs)
 
     written = rejected = 0
     with mp.get_context("spawn").Pool(procs, initializer=_init_worker, initargs=(str(paths.voices),)) as pool:
         with tqdm(total=count, desc=f"TTS {kind}") as bar:
-            for _, audio in pool.imap_unordered(synthesize, task_stream(combos, worker_cfg, seed), chunksize=8):
+            for _, audio in pool.imap_unordered(synthesize, task_stream(combos, worker_cfg, seed, count), chunksize=8):
                 if audio is None:
                     rejected += 1
                     if rejected > 5 * count + 100:
