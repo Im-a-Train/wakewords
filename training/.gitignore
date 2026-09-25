@@ -1,0 +1,9 @@
+# Heruntergeladene Daten, Features, Checkpoints (viele GB)
+data/
+# Vorschau-Audio
+output/preview/
+# Eigene Stimmaufnahmen bleiben privat und lokal
+recordings/**/*
+!recordings/**/
+!recordings/**/LIESMICH.txt
+__pycache__/

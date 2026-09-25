@@ -1,0 +1,17 @@
+# TensorFlow kommt aus dem Basis-Image (ROCm) bzw. wird für CPU separat installiert.
+# microWakeWord selbst wird im Dockerfile per git geklont.
+ai-edge-litert
+audiomentations
+# Fork, der die veraltete attrs-Pinnung entfernt (wie im offiziellen Notebook)
+audio-metadata @ git+https://github.com/whatsnowplaying/audio-metadata@d4ebb238e6a401bb1a5aaaac60c9e2b3cb30929f
+# datasets 4+ braucht torchcodec zum Dekodieren, 3.6 nutzt soundfile
+datasets==3.6.0
+mmap_ninja
+piper-tts==1.8.0
+pyarrow
+pymicro-features
+pyyaml
+scipy
+soundfile
+tqdm
+webrtcvad-wheels

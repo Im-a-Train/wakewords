@@ -1,0 +1,4 @@
+Pro Person einen Unterordner anlegen, z. B. recordings/positive/melvin/
+und darin eine oder mehrere Aufnahmen (Handy-Sprachmemo reicht) ablegen.
+Jede Aufnahme: «Hey Henä» sagen, ca. 1-2 Sekunden Pause, wieder «Hey Henä» ...
+Details: siehe training/README.md
