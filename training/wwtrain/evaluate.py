@@ -120,7 +120,10 @@ def run(paths: Paths, cfg: dict, model_path: Path | None = None, window: int | N
 
     report = "\n".join(lines)
     report += f"\n\n{len(clips)} Positiv-Schnipsel. Empfohlener probability_cutoff: {best[0]:.2f} " \
-              f"(Erkennung {best[1] * 100:.1f}%, max. {target} Fehlauslösungen/h)"
+              f"(Erkennung {best[1] * 100:.1f}%)"
+    if negatives and not ok:
+        report += f"\nAchtung: keine Schwelle erreicht max. {target} Fehlauslösungen/h. Fehlen die " \
+                  "Negativ-Features (./run.sh download)? Sonst mehr Negativ-Aufnahmen sammeln."
     if not negatives:
         report += "\nAchtung: keine Negativ-Daten gefunden, Fehlauslösungen wurden nicht gemessen."
     if best[1] < 0.8:
