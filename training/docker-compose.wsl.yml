@@ -1,0 +1,23 @@
+# Ergänzung für Windows (WSL2): wird von ./run.sh automatisch dazugenommen,
+# wenn /dev/dxg existiert und /dev/kfd fehlt.
+# Unter WSL spricht ROCm die Karte über den Windows-Treiber an (DXCore + librocdxg).
+# Voraussetzung im WSL-Ubuntu: Adrenalin-Treiber ≥ 26.2.2 unter Windows und
+# librocdxg installiert (siehe README, Abschnitt «Windows»).
+services:
+  wwtrain:
+    devices: !override
+      - /dev/dxg
+    volumes:
+      - .:/work
+      - ..:/repo:ro
+      - /usr/lib/wsl/lib/libdxcore.so:/usr/lib/libdxcore.so:ro
+      - ${ROCDXG_LIB:-/opt/rocm/lib/librocdxg.so}:/usr/lib/librocdxg.so:ro
+      - ${ROCDXG_DIDS:-/opt/rocm/share/rocdxg/dids.conf}:/usr/share/rocdxg/dids.conf:ro
+    cap_add:
+      - SYS_PTRACE
+    environment:
+      HOME: /tmp
+      MIOPEN_USER_DB_PATH: /work/data/.miopen
+      MIOPEN_CUSTOM_CACHE_DIR: /work/data/.miopen
+      # Für ROCm-Versionen vor 7.13 nötig (das Standard-Image hat 7.2.4)
+      HSA_ENABLE_DXG_DETECTION: "1"
