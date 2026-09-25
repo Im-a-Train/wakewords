@@ -103,7 +103,7 @@ def run(paths: Paths, cfg: dict, fresh: bool = False, convert_only: bool = False
     LOG.info("Trainingsparameter: %s", params_file)
 
     cmd = [
-        sys.executable, "-m", "microwakeword.model_train_eval",
+        sys.executable, "-m", "wwtrain.mww_run",
         f"--training_config={params_file}",
         f"--train={0 if convert_only else 1}",
         "--restore_checkpoint=1",
