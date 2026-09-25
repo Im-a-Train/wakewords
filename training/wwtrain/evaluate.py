@@ -80,7 +80,7 @@ def run(paths: Paths, cfg: dict, model_path: Path | None = None, window: int | N
         raise SystemExit(f"Modell {model_path} nicht gefunden")
     from ai_edge_litert.interpreter import Interpreter
 
-    shape = list(Interpreter(model_path=str(model_path)).get_input_details()[0]["shape"])
+    shape = [int(x) for x in Interpreter(model_path=str(model_path)).get_input_details()[0]["shape"]]
     if shape[-1] != 40:
         raise SystemExit(f"{model_path.name} hat den Eingang {shape} und ist kein microWakeWord-Modell "
                          "(vermutlich openWakeWord). Es läuft nicht auf dem Voice PE.")
