@@ -16,8 +16,9 @@ Was sie besser macht als das Colab-Notebook:
 
 ## Voraussetzungen
 
-- Linux mit Docker und Docker Compose
-- AMD-Treiber mit ROCm-Unterstützung auf dem Host (`/dev/kfd` und `/dev/dri` müssen existieren).
+- **Windows:** WSL2 mit Ubuntu 24.04 und Docker, siehe [Abschnitt «Windows»](#windows-wsl2)
+- **Linux:** Docker und Docker Compose, AMD-Treiber mit ROCm-Unterstützung auf dem Host
+  (`/dev/kfd` und `/dev/dri` müssen existieren).
   Für die RX 9070 XT braucht es einen aktuellen Kernel/amdgpu-Treiber (ROCm ≥ 6.4.1).
   Prüfen auf dem Host: `ls /dev/kfd /dev/dri` und `groups` (du solltest in `video` und `render` sein).
 - ca. 60 GB freier Speicher (ROCm-Image ~30 GB, Downloads ~8 GB, Features ~15 GB)
@@ -25,6 +26,47 @@ Was sie besser macht als das Colab-Notebook:
 
 Das Standard-Image `rocm/tensorflow:rocm7.2.4-py3.12-tf2.20-dev` ist von AMD
 ausdrücklich auch für `gfx1201` (RX 9070 / 9070 XT) gebaut.
+
+## Windows (WSL2)
+
+Unter Windows läuft alles in WSL2. ROCm spricht die Karte dort nicht über `/dev/kfd` an,
+sondern über den Windows-Treiber (`/dev/dxg` + AMDs Bibliothek `librocdxg`). AMD
+unterstützt das offiziell für die RX 9070 XT und TensorFlow 2.20 (ROCm 7.2).
+`run.sh` erkennt WSL automatisch und nimmt `docker-compose.wsl.yml` dazu.
+
+Einmalige Einrichtung:
+
+1. **Windows:** AMD-Adrenalin-Treiber **26.2.2 oder neuer** installieren.
+2. **WSL mit Ubuntu 24.04** installieren (PowerShell als Administrator):
+   ```powershell
+   wsl --install -d Ubuntu-24.04
+   ```
+3. **Im Ubuntu-Terminal: Docker Engine** installieren (<https://docs.docker.com/engine/install/ubuntu/>).
+   Docker Desktop mit WSL-Integration kann auch gehen, aber die ROCm-Bibliotheken müssen
+   im Ubuntu liegen. Mit Docker direkt in Ubuntu ist das sicher der Fall.
+4. **librocdxg installieren** (verbindet ROCm mit dem Windows-Treiber), gemäss
+   <https://github.com/ROCm/librocdxg> (fertiges `.deb` oder aus dem Quellcode). Danach muss
+   `/opt/rocm/lib/librocdxg.so` existieren. Liegt die Datei woanders, den Pfad setzen:
+   `export ROCDXG_LIB=/pfad/librocdxg.so`.
+5. **Repo ins Linux-Dateisystem klonen**, nicht nach `/mnt/c/...`. Unter `/mnt/c` sind die
+   Dateizugriffe extrem langsam, und das Training liest viele GB:
+   ```bash
+   cd ~ && git clone https://github.com/Im-a-Train/wakewords.git
+   cd wakewords/training
+   ```
+6. Weiter mit dem Schnellstart unten. `./run.sh check-gpu` muss die GPU zeigen.
+
+Aufnahmen vom Handy kopierst du im Windows-Explorer nach
+`\\wsl$\Ubuntu-24.04\home\<benutzer>\wakewords\training\recordings\positive\<name>\`.
+Die fertigen Modelle findest du dort unter `...\training\output\`.
+
+Falls die GPU unter WSL nicht erkannt wird:
+
+- Unter Windows den Adrenalin-Treiber aktualisieren und `wsl --update` ausführen.
+- Im Ubuntu prüfen: `ls -l /dev/dxg /usr/lib/wsl/lib/libdxcore.so /opt/rocm/lib/librocdxg.so`.
+- Ein neueres ROCm-Image probieren (ab ROCm 7.13 braucht es `HSA_ENABLE_DXG_DETECTION` nicht mehr):
+  `docker compose build --build-arg BASE_IMAGE=rocm/tensorflow:rocm7.14.1-ubuntu24.04-py3.12-tf2.20`
+- Notfalls auf der CPU trainieren: `WWTRAIN_CPU=1 ./run.sh train`.
 
 ## Schnellstart
 
@@ -175,6 +217,7 @@ training/
 ├── run.sh               Einstieg (docker compose run)
 ├── Dockerfile           ROCm- oder CPU-Image
 ├── docker-compose.yml
+├── docker-compose.wsl.yml   Ergänzung für Windows/WSL2 (automatisch)
 ├── wwtrain/             Python-Pipeline
 │   ├── download.py      Stimmen, Hall (MIT RIR), Geräusche (AudioSet, FMA), Negativ-Features
 │   ├── recordings.py    eigene Aufnahmen importieren und schneiden

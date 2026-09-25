@@ -15,5 +15,16 @@ if [ -z "$RENDER_GID" ] || [ "$RENDER_GID" = "$VIDEO_GID" ]; then export RENDER_
 service=wwtrain
 [ "${WWTRAIN_CPU:-0}" = "1" ] && service=wwtrain-cpu
 
+compose=(docker compose -f docker-compose.yml)
+# Windows/WSL2: GPU über /dev/dxg statt /dev/kfd
+if [ -e /dev/dxg ] && [ ! -e /dev/kfd ]; then
+  compose+=(-f docker-compose.wsl.yml)
+  if [ "$service" = wwtrain ] && [ ! -e "${ROCDXG_LIB:-/opt/rocm/lib/librocdxg.so}" ]; then
+    echo "WSL erkannt, aber librocdxg fehlt (${ROCDXG_LIB:-/opt/rocm/lib/librocdxg.so})." >&2
+    echo "Siehe README, Abschnitt «Windows». Ohne GPU: WWTRAIN_CPU=1 ./run.sh ..." >&2
+    exit 1
+  fi
+fi
+
 mkdir -p data output recordings/positive recordings/negative
-exec docker compose --profile cpu run --rm "$service" "$@"
+exec "${compose[@]}" --profile cpu run --rm "$service" "$@"
