@@ -10,8 +10,9 @@
 #   3. «Install» → «Wirelessly»
 
 substitutions:
-  # Gleich wie bisher in Home Assistant, damit das Gerät seine Entitäten behält
-  name: home-assistant-voice
+  # Vollständiger Gerätename inkl. MAC-Endung, genau wie er im Log unter
+  # «mDNS: Hostname» steht. So behält das Gerät Namen, Entitäten und OTA-Adresse.
+  name: home-assistant-voice-092586
   friendly_name: Home Assistant Voice
   # Modell-Manifest (nach dem Training aus training/output/ ins Repo-Root kopieren)
   hey_hena_model: https://raw.githubusercontent.com/Im-a-Train/wakewords/refs/heads/main/hey_hena.json
@@ -22,6 +23,10 @@ packages:
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
+  # Die offizielle Firmware hängt die MAC-Adresse selbst an den Namen an.
+  # Das ist nur für die Erstinstallation gedacht; mit festem Namen oben kann
+  # das Dashboard den Online-Status wieder zuordnen.
+  name_add_mac_suffix: false
 
 wifi:
   ssid: !secret wifi_ssid
